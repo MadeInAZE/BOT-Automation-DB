@@ -24,6 +24,7 @@ def build():
 
 
 def commit():
+    print("Committing...")
     cxn.commit()
 
 def autosave(sched):

@@ -7,11 +7,25 @@ from datetime import datetime
 from discord.ext.commands import CommandNotFound
 from ..db import db
 from apscheduler.triggers.cron import CronTrigger
+from asyncio import sleep
 import os
 
 PREFIX = "+"
 OWNER_IDS = [618038532665114624]
 COGS = [path.split(os.sep)[-1][:-3] for path in glob("./lib/cogs/*.py")]
+
+class Ready(object):
+    def __init__(self):
+        for cog in COGS:
+            setattr(self, cog, False)
+
+    def ready_up(self, cog):
+        setattr(self, cog, True)
+        print(f"{cog} is Ready!")
+
+    def all_ready(self):
+        return all([getattr(self, cog) for cog in COGS])
+
 
 class Bot(BotBase):
     def __init__(self):
@@ -80,12 +94,12 @@ class Bot(BotBase):
         if not self.ready:
             self.channel = self.get_channel(757016278060761178)
             self.ready = True
+            self.cogs_ready = Ready()
             self.guild = self.get_guild(746850984701198437)
             self.stdout = self.get_channel(757016278060761178)
             self.scheduler.add_job(self.print_message, CronTrigger(day_of_week=0, hour=12, minute=0, second=0))
             self.scheduler.start()
             #channel = self.channel
-            await self.stdout.send("Now online!")
 
             # embed = Embed(title="Now online!", url="https://www.github.com/woosal1337",
             #               description="MadeInAZE is now online.",
@@ -106,7 +120,13 @@ class Bot(BotBase):
             #
             # await channel.send(file=File("./data/images/elon.gif"))
 
-            print("BOT is ready!")
+            await self.stdout.send("Now online!")
+
+            while self.cogs_ready.all_ready():
+                await sleep(0.5)
+
+            await self.stdout.send("Now online!")
+            await self.stdout.send("If this prints, then COGs do work!")
 
         else:
             print("BOT reconnected!")
